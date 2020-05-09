@@ -28,6 +28,25 @@ end
 
 %% ===========Graficos=============================
 
+% Deformacion vs Esfuerzo en el mismo gráfico
+color = [
+    0.1, 0.1, 1;
+    1, 0.1, 0.1;
+    0.5, 0.5, 1;
+    1, 0.5, 0.5;
+    0.7, 0.7, 1;
+    1, 0.7, 0.7;
+];
+figure('Name','Deformacion vs Esfuerzo','Position',[0 0 1366 768])
+for i = 1:6
+    p = plot(muestra{i}.long, muestra{i}.stress,'LineWidth', 2, 'Color', color(i,:));
+    h(i) = p(1);
+    grid on;
+    hold on;
+end
+legend(h, 'M1 0 grados', 'M2 0 grados', 'M1 45 grados', 'M2 45 grados', 'M1 90 grados', 'M2 90 grados');
+hold off;
+
 % Deformacion longitudinal vs Esfuerzo
 figure('Name','Deformacion longitudial vs Esfuerzo','Position',[0 0 1366 768])
 grad = [0,0,45,45,90,90];
