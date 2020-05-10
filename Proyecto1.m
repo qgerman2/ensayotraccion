@@ -26,6 +26,41 @@ for i=1:6
     muestra{i}.stress = muestra{i}.area\muestra{i}.force(:,end); % Fuerza(N)/Area inicial(mm^2)
 end
 
+%% =========== Calculo constantes elasticas =====================
+%Limite proporcional y modulo de young
+epsilon = 20000;
+for i = 1:6
+    %dominio x para evaluar polinomio
+    paso = 0.00001;
+    x_dom = muestra{i}.long(1):paso:muestra{i}.long(end);
+    %polinomio de curva esfuerzo - deformacion longitudinal
+    [C, iu] = unique(muestra{i}.long);
+    p = polyfit(muestra{i}.long(iu, :), muestra{i}.stress(iu, :), 6);
+    %derivar polinomio
+    p_d = polyder(p);
+    p_d2 = polyder(p_d);
+    %encontrar y = 0 en segunda derivada
+    zci = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0);
+    xder2_cero = x_dom(zci(polyval(p_d2, x_dom)));
+    %encontrar cuando la primera derivada se desvía mucho (limite proporcional)
+    yder = polyval(p_d, xder2_cero(1));
+    xder_desvio = find(polyval(p_d, x_dom) > yder - epsilon, 1, 'last');
+    muestra{i}.proplim = polyval(p, x_dom(xder_desvio));
+    %encontrar pendiente en rango hasta limite proporcional (modulo de young)
+    x_dom_proporcional = x_dom(1:xder_desvio);
+    c = polyfit(x_dom_proporcional, polyval(p, x_dom_proporcional), 1);
+    muestra{i}.young = c(1);
+    %polinomio de curva deformacion transversal - deformacion longitudinal
+    p = polyfit(muestra{i}.long(iu, :), muestra{i}.trans(iu, :), 6);
+    %encontrar pendiente en rango hasta limite proporcional (modulo de poisson)
+    c = polyfit(x_dom_proporcional, polyval(p, x_dom_proporcional), 1);
+    muestra{i}.poisson = -c(1);
+    %modulo de corte
+    muestra{i}.corte = muestra{i}.young/(2*(1+muestra{i}.poisson));
+    %offset
+    muestra{i}.fluelim = 0;
+end
+
 %% ===========Graficos=============================
 
 % Deformacion vs Esfuerzo en el mismo gráfico
@@ -75,41 +110,6 @@ for i = [1,3,5,2,4,6]
         'Interpreter','latex','FontSize',14),
     xlabel('$\epsilon_l $','Interpreter','latex','FontSize',14),ylabel('$\epsilon_t $','Interpreter','latex','FontSize',14),
     grid on
-end
-
-%% =========== Calculo constantes elasticas =====================
-%Limite proporcional y modulo de young
-epsilon = 20000;
-for i = 1:6
-    %dominio x para evaluar polinomio
-    paso = 0.00001;
-    x_dom = muestra{i}.long(1):paso:muestra{i}.long(end);
-    %polinomio de curva esfuerzo - deformacion longitudinal
-    [C, iu] = unique(muestra{i}.long);
-    p = polyfit(muestra{i}.long(iu, :), muestra{i}.stress(iu, :), 6);
-    %derivar polinomio
-    p_d = polyder(p);
-    p_d2 = polyder(p_d);
-    %encontrar y = 0 en segunda derivada
-    zci = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0);
-    xder2_cero = x_dom(zci(polyval(p_d2, x_dom)));
-    %encontrar cuando la primera derivada se desvía mucho (limite proporcional)
-    yder = polyval(p_d, xder2_cero(1));
-    xder_desvio = find(polyval(p_d, x_dom) > yder - epsilon, 1, 'last');
-    muestra{i}.proplim = polyval(p, x_dom(xder_desvio));
-    %encontrar pendiente en rango hasta limite proporcional (modulo de young)
-    x_dom_proporcional = x_dom(1:xder_desvio);
-    c = polyfit(x_dom_proporcional, polyval(p, x_dom_proporcional), 1);
-    muestra{i}.young = c(1);
-    %polinomio de curva deformacion transversal - deformacion longitudinal
-    p = polyfit(muestra{i}.long(iu, :), muestra{i}.trans(iu, :), 6);
-    %encontrar pendiente en rango hasta limite proporcional (modulo de poisson)
-    c = polyfit(x_dom_proporcional, polyval(p, x_dom_proporcional), 1);
-    muestra{i}.poisson = -c(1);
-    %modulo de corte
-    muestra{i}.corte = muestra{i}.young/(2*(1+muestra{i}.poisson));
-    %offset
-    muestra{i}.fluelim = 0;
 end
 
 % Desplegar constates elasticas
