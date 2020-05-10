@@ -86,42 +86,41 @@ for i = 1:6
     x_dom = muestra{i}.long(1):paso:muestra{i}.long(end);
     %polinomio de curva esfuerzo - deformacion longitudinal
     [C, iu] = unique(muestra{i}.long);
-    muestra{i}.poly = polyfit(muestra{i}.long(iu, :), muestra{i}.stress(iu, :), 6);
+    p = polyfit(muestra{i}.long(iu, :), muestra{i}.stress(iu, :), 6);
     %derivar polinomio
-    muestra{i}.poly_der = polyder(muestra{i}.poly);
-    muestra{i}.poly_der2 = polyder(muestra{i}.poly_der);
+    p_d = polyder(p);
+    p_d2 = polyder(p_d);
     %encontrar y = 0 en segunda derivada
     zci = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0);
-    xder2_cero = x_dom(zci(polyval(muestra{i}.poly_der2, x_dom)));
+    xder2_cero = x_dom(zci(polyval(p_d2, x_dom)));
     %encontrar cuando la primera derivada se desvía mucho (limite proporcional)
-    yder = polyval(muestra{i}.poly_der, xder2_cero(1));
-    xder_desvio = find(polyval(muestra{i}.poly_der, x_dom) > yder - epsilon, 1, 'last');
-    muestra{i}.proplim = polyval(muestra{i}.poly, x_dom(xder_desvio));
+    yder = polyval(p_d, xder2_cero(1));
+    xder_desvio = find(polyval(p_d, x_dom) > yder - epsilon, 1, 'last');
+    muestra{i}.proplim = polyval(p, x_dom(xder_desvio));
     %encontrar pendiente en rango hasta limite proporcional (modulo de young)
     x_dom_proporcional = x_dom(1:xder_desvio);
-    c = polyfit(x_dom_proporcional, polyval(muestra{i}.poly, x_dom_proporcional), 1);
+    c = polyfit(x_dom_proporcional, polyval(p, x_dom_proporcional), 1);
     muestra{i}.young = c(1);
-end
-%
-for i = 1:6
-    muestra{i}.proplim = find(muestra{i}.long > (0.002),1) - 1;                                     % Indice para el proplime de fluencia
-    c = polyfit(muestra{i}.long(1:muestra{i}.proplim),muestra{i}.stress(1:muestra{i}.proplim),1);   % Ajuste polinomial lineal
-    %muestra{i}.young = c(1);                                                                        % Módulo de Young
-    c = polyfit(muestra{i}.long(1:muestra{i}.proplim),muestra{i}.trans(1:muestra{i}.proplim),1);    % Ajuste polinomial lineal
-    muestra{i}.poisson = -c(1);                                                                     % Módulo de Poisson
-    muestra{i}.corte = muestra{i}.young/(2*(1+muestra{i}.poisson));                                 % Módulo de corte
-    muestra{i}.proplim = muestra{i}.stress(muestra{i}.proplim(1));                                  % Limite proporcional
+    %polinomio de curva deformacion transversal - deformacion longitudinal
+    p = polyfit(muestra{i}.long(iu, :), muestra{i}.trans(iu, :), 6);
+    %encontrar pendiente en rango hasta limite proporcional (modulo de poisson)
+    c = polyfit(x_dom_proporcional, polyval(p, x_dom_proporcional), 1);
+    muestra{i}.poisson = -c(1);
+    %modulo de corte
+    muestra{i}.corte = muestra{i}.young/(2*(1+muestra{i}.poisson));
+    %offset
+    muestra{i}.fluelim = 0;
 end
 
 % Desplegar constates elasticas
 
-Constantes = {'Modulo de Young';'Modulo de Poisson';'Modulo de corte';'proplime proporcional'};
-Muestra1_0grad = [muestra{1}.young ; muestra{1}.poisson ; muestra{1}.corte ; muestra{1}.proplim];
-Muestra2_0grad = [muestra{2}.young ; muestra{2}.poisson ; muestra{2}.corte ; muestra{2}.proplim];
-Muestra1_45grad = [muestra{3}.young ; muestra{3}.poisson ; muestra{3}.corte ; muestra{3}.proplim];
-Muestra2_45grad = [muestra{4}.young ; muestra{4}.poisson ; muestra{4}.corte ; muestra{4}.proplim];
-Muestra1_90grad = [muestra{5}.young ; muestra{5}.poisson ; muestra{5}.corte ; muestra{5}.proplim];
-Muestra2_90grad = [muestra{6}.young ; muestra{6}.poisson ; muestra{6}.corte ; muestra{6}.proplim];
+Constantes = {'Modulo de Young';'Modulo de Poisson';'Modulo de corte';'Limite proporcional';'Limite de fluencia'};
+Muestra1_0grad = [muestra{1}.young ; muestra{1}.poisson ; muestra{1}.corte ; muestra{1}.proplim ; muestra{1}.fluelim];
+Muestra2_0grad = [muestra{2}.young ; muestra{2}.poisson ; muestra{2}.corte ; muestra{2}.proplim ; muestra{2}.fluelim];
+Muestra1_45grad = [muestra{3}.young ; muestra{3}.poisson ; muestra{3}.corte ; muestra{3}.proplim ; muestra{3}.fluelim];
+Muestra2_45grad = [muestra{4}.young ; muestra{4}.poisson ; muestra{4}.corte ; muestra{4}.proplim ; muestra{4}.fluelim];
+Muestra1_90grad = [muestra{5}.young ; muestra{5}.poisson ; muestra{5}.corte ; muestra{5}.proplim ; muestra{5}.fluelim];
+Muestra2_90grad = [muestra{6}.young ; muestra{6}.poisson ; muestra{6}.corte ; muestra{6}.proplim ; muestra{6}.fluelim];
 T = table(Constantes,Muestra1_0grad,Muestra1_0grad,Muestra1_45grad,Muestra2_45grad,Muestra1_90grad,Muestra2_90grad);
 disp(T)
 
