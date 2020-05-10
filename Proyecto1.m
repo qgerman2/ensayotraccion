@@ -50,6 +50,19 @@ for i = 1:6
     x_dom_proporcional = x_dom(1:xder_desvio);
     c = polyfit(x_dom_proporcional, polyval(p, x_dom_proporcional), 1);
     muestra{i}.young = c(1);
+    %encontrar punto mas cercano entre recta con pendiente de young y datos (limite de fluencia)
+    offset = 0.002;
+    dist_corta = -1;
+    for x = x_dom
+        r = [x, muestra{i}.young * (x - offset)];
+        pv = [x, polyval(p, x)];
+        dist = norm(r - pv);
+        if (dist_corta == -1 || dist < dist_corta)
+            dist_corta = dist;
+            muestra{i}.fluelim = pv(2);
+            muestra{i}.fluelim_x = pv(1);
+        end
+    end
     %polinomio de curva deformacion transversal - deformacion longitudinal
     p = polyfit(muestra{i}.long(iu, :), muestra{i}.trans(iu, :), 6);
     %encontrar pendiente en rango hasta limite proporcional (modulo de poisson)
@@ -57,8 +70,6 @@ for i = 1:6
     muestra{i}.poisson = -c(1);
     %modulo de corte
     muestra{i}.corte = muestra{i}.young/(2*(1+muestra{i}.poisson));
-    %offset
-    muestra{i}.fluelim = 0;
 end
 
 %% ===========Graficos=============================
@@ -91,6 +102,7 @@ for i = [1,3,5,2,4,6]
     subplot(2,3,j)
     j = j+1;
     plot(muestra{i}.long,muestra{i}.stress);
+    line([0.002, muestra{i}.fluelim_x], [0, muestra{i}.fluelim]);
     title({'Deformacion longitudinal vs Esfuerzo';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
         'Interpreter','latex','FontSize',14),
     xlabel('$\epsilon_l $','Interpreter','latex','FontSize',14),ylabel('$\sigma [MPa]$','Interpreter','latex','FontSize',14),
