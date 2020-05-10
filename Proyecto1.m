@@ -78,7 +78,27 @@ for i = [1,3,5,2,4,6]
 end
 
 %% =========== Calculo constantes elasticas =====================
-
+%Limite proporcional
+epsilon = 20000;
+for i = 1:6
+    %dominio x para evaluar polinomio
+    paso = 0.0001;
+    x_dom = muestra{i}.long(1):paso:muestra{i}.long(end);
+    %polinomio de curva esfuerzo - deformacion longitudinal
+    [C, iu] = unique(muestra{i}.long);
+    muestra{i}.poly = polyfit(muestra{i}.long(iu, :), muestra{i}.stress(iu, :), 6);
+    %derivar polinomio
+    muestra{i}.poly_der = polyder(muestra{i}.poly);
+    muestra{i}.poly_der2 = polyder(muestra{i}.poly_der);
+    %encontrar y = 0 en segunda derivada
+    zci = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0);
+    xder2_cero = x_dom(zci(polyval(muestra{i}.poly_der2, x_dom)));
+    %encontrar cuando la primera derivada se desvía mucho
+    yder = polyval(muestra{i}.poly_der, xder2_cero(1));
+    xder_desvio = find(polyval(muestra{i}.poly_der, x_dom) > yder - epsilon, 1, 'last');
+    muestra{i}.proplim = polyval(muestra{i}.poly, xder_desvio * paso);
+    muestra{i}.proplim
+end
 % Aqui se considera el criterio del offset, para calcular las constantes por minimos cuadrados
 for i = 1:6
     muestra{i}.proplim = find(muestra{i}.long > (0.002),1) - 1;                                     % Indice para el proplime de fluencia
