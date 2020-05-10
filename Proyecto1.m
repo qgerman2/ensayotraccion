@@ -46,6 +46,7 @@ for i = 1:6
     yder = polyval(p_d, xder2_cero(1));
     xder_desvio = find(polyval(p_d, x_dom) > yder - epsilon, 1, 'last');
     muestra{i}.proplim = polyval(p, x_dom(xder_desvio));
+    muestra{i}.proplim_x = x_dom(xder_desvio);
     %encontrar pendiente en rango hasta limite proporcional (modulo de young)
     x_dom_proporcional = x_dom(1:xder_desvio);
     c = polyfit(x_dom_proporcional, polyval(p, x_dom_proporcional), 1);
@@ -102,10 +103,15 @@ for i = [1,3,5,2,4,6]
     subplot(2,3,j)
     j = j+1;
     plot(muestra{i}.long,muestra{i}.stress);
+    %dibujar puntos de importancia
+    hold on
+    plot(muestra{i}.fluelim_x, muestra{i}.fluelim, 'o');
+    plot(muestra{i}.proplim_x, muestra{i}.proplim, 'o');
     line([0.002, muestra{i}.fluelim_x], [0, muestra{i}.fluelim]);
     title({'Deformacion longitudinal vs Esfuerzo';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
         'Interpreter','latex','FontSize',14),
     xlabel('$\epsilon_l $','Interpreter','latex','FontSize',14),ylabel('$\sigma [MPa]$','Interpreter','latex','FontSize',14),
+    hold off
     grid on
 end
 
