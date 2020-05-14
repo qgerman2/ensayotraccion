@@ -60,8 +60,8 @@ for i = 1:6
         dist = norm(r - pv);
         if (dist_corta == -1 || dist < dist_corta)
             dist_corta = dist;
-            muestra{i}.fluelim = pv(2);
-            muestra{i}.fluelim_x = pv(1);
+            muestra{i}.yieldlim = pv(2);
+            muestra{i}.yieldlim_x = pv(1);
         end
     end
     %polinomio de curva deformacion transversal - deformacion longitudinal
@@ -84,33 +84,40 @@ color = [
     0.7, 0.7, 1;
     1, 0.7, 0.7;
 ];
-figure('Name','Deformacion vs Esfuerzo','Position',[0 0 1366 768])
+figure('Name','Deformación vs Esfuerzo','Position',[0 0 1366 768])
 for i = 1:6
     p = plot(muestra{i}.long, muestra{i}.stress,'LineWidth', 2, 'Color', color(i,:));
     h(i) = p(1);
+    xlabel('$\epsilon_l $','Interpreter','latex','FontSize',16),ylabel('$\sigma [MPa]$','Interpreter','latex','FontSize',16),
+    axis([0 ,1.1e-2,0, 800])
     grid on;
     hold on;
 end
-legend(h, 'M1 0 grados', 'M2 0 grados', 'M1 45 grados', 'M2 45 grados', 'M1 90 grados', 'M2 90 grados');
+legend(h, {'Muestra 1 a $0^{\circ}$','Muestra 2 a $0^{\circ}$','Muestra 1 a $45^{\circ}$',...
+    'Muestra 2 a $45^{\circ}$','Muestra 1 a $90^{\circ}$','Muestra 2 a $90^{\circ}$'},...
+    'Interpreter','latex','Location','southeast','FontSize',14);
 hold off;
 
 % Deformacion longitudinal vs Esfuerzo
-figure('Name','Deformacion longitudial vs Esfuerzo','Position',[0 0 1366 768])
+figure('Name','Deformación longitudial vs Esfuerzo','Position',[0 0 1366 768])
 grad = [0,0,45,45,90,90];
 m = [1,2,1,2,1,2];
 j = 1;
 for i = [1,3,5,2,4,6]
     subplot(2,3,j)
     j = j+1;
+    % Grafica principal 
     plot(muestra{i}.long,muestra{i}.stress);
-    %dibujar puntos de importancia
+    % Graficar puntos de importancia
     hold on
-    plot(muestra{i}.fluelim_x, muestra{i}.fluelim, 'o');
-    plot(muestra{i}.proplim_x, muestra{i}.proplim, 'o');
-    line([0.002, muestra{i}.fluelim_x], [0, muestra{i}.fluelim]);
+    p1 = plot(muestra{i}.yieldlim_x, muestra{i}.yieldlim, 'o');
+    p2 = plot(muestra{i}.proplim_x, muestra{i}.proplim, 'o');
+    p3 = line([0.002, muestra{i}.yieldlim_x], [0, muestra{i}.yieldlim],'LineStyle','--');
     title({'Deformacion longitudinal vs Esfuerzo';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
         'Interpreter','latex','FontSize',14),
     xlabel('$\epsilon_l $','Interpreter','latex','FontSize',14),ylabel('$\sigma [MPa]$','Interpreter','latex','FontSize',14),
+    legend([p1,p2,p3],{'Limite de fluencia','Limite proporcional','Criterio del Offset'},'Location','southeast','FontSize',14),
+    axis([0 ,1.1e-2,0, 800])
     hold off
     grid on
 end
@@ -127,27 +134,24 @@ for i = [1,3,5,2,4,6]
     title({'Deformacion longitudinal vs Deformacion transversal';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
         'Interpreter','latex','FontSize',14),
     xlabel('$\epsilon_l $','Interpreter','latex','FontSize',14),ylabel('$\epsilon_t $','Interpreter','latex','FontSize',14),
+    axis([0 ,1.1e-2, -5e-3 ,0])
     grid on
 end
 
 % Desplegar constates elasticas
 
 Constantes = {'Modulo de Young';'Modulo de Poisson';'Modulo de corte';'Limite proporcional';'Limite de fluencia'};
-Muestra1_0grad = [muestra{1}.young ; muestra{1}.poisson ; muestra{1}.corte ; muestra{1}.proplim ; muestra{1}.fluelim];
-Muestra2_0grad = [muestra{2}.young ; muestra{2}.poisson ; muestra{2}.corte ; muestra{2}.proplim ; muestra{2}.fluelim];
-Muestra1_45grad = [muestra{3}.young ; muestra{3}.poisson ; muestra{3}.corte ; muestra{3}.proplim ; muestra{3}.fluelim];
-Muestra2_45grad = [muestra{4}.young ; muestra{4}.poisson ; muestra{4}.corte ; muestra{4}.proplim ; muestra{4}.fluelim];
-Muestra1_90grad = [muestra{5}.young ; muestra{5}.poisson ; muestra{5}.corte ; muestra{5}.proplim ; muestra{5}.fluelim];
-Muestra2_90grad = [muestra{6}.young ; muestra{6}.poisson ; muestra{6}.corte ; muestra{6}.proplim ; muestra{6}.fluelim];
+Muestra1_0grad = [muestra{1}.young ; muestra{1}.poisson ; muestra{1}.corte ; muestra{1}.proplim ; muestra{1}.yieldlim];
+Muestra2_0grad = [muestra{2}.young ; muestra{2}.poisson ; muestra{2}.corte ; muestra{2}.proplim ; muestra{2}.yieldlim];
+Muestra1_45grad = [muestra{3}.young ; muestra{3}.poisson ; muestra{3}.corte ; muestra{3}.proplim ; muestra{3}.yieldlim];
+Muestra2_45grad = [muestra{4}.young ; muestra{4}.poisson ; muestra{4}.corte ; muestra{4}.proplim ; muestra{4}.yieldlim];
+Muestra1_90grad = [muestra{5}.young ; muestra{5}.poisson ; muestra{5}.corte ; muestra{5}.proplim ; muestra{5}.yieldlim];
+Muestra2_90grad = [muestra{6}.young ; muestra{6}.poisson ; muestra{6}.corte ; muestra{6}.proplim ; muestra{6}.yieldlim];
 T = table(Constantes,Muestra1_0grad,Muestra1_0grad,Muestra1_45grad,Muestra2_45grad,Muestra1_90grad,Muestra2_90grad);
 disp(T)
 
 %% ========= Graficos Esfuerzo vs Ctes elasticas ==============================
 
-yieldlim = [400,400,400,400,400,400]; % Limite de fluencia
-for i = 1:6
-    muestra{i}.yieldlim = yieldlim(i);
-end
 % Calculo constantes
 for i = 1:6
     ind = find(muestra{i}.stress > muestra{i}.yieldlim,1); 
@@ -169,6 +173,7 @@ for i = [1,3,5,2,4,6]
     title({'Esfuerzo vs Modulo de Young Secante';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
         'Interpreter','latex','FontSize',14),
     xlabel('$\sigma[MPa] $','Interpreter','latex','FontSize',14),ylabel('$E[MPa]$','Interpreter','latex','FontSize',14),
+    axis([0,muestra{i}.yieldlim,1e5,3e5])
     grid on
 end
 
@@ -184,10 +189,30 @@ for i = [1,3,5,2,4,6]
     title({'Esfuerzo vs Modulo de Young Tangente';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
         'Interpreter','latex','FontSize',14),
     xlabel('$\sigma[MPa] $','Interpreter','latex','FontSize',14),ylabel('$E[MPa]$','Interpreter','latex','FontSize',14),
+    axis([0,muestra{i}.yieldlim,0,3e5])
     grid on
 end
 
-% Esfuerzo vs Modulo de Poisson
+% Esfuerzo vs Modulo de Young discretos
+figure('Name','Esfuerzo vs Modulo de Young discretos','Position',[0 0 1366 768])
+grad = [0,0,45,45,90,90];
+m = [1,2,1,2,1,2];
+j = 1;
+for i = [1,3,5,2,4,6]
+    subplot(2,3,j)
+    j = j+1;
+    hold on
+    p1 = plot(muestra{i}.stress(1:length(muestra{i}.youngtg)),muestra{i}.youngtg,'ob','MarkerSize',2);
+    p2 = plot(muestra{i}.stress(1:length(muestra{i}.youngsec)),muestra{i}.youngsec,'or','MarkerSize',2);
+    title({'Esfuerzo vs Modulo de Young Discretos';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
+        'Interpreter','latex','FontSize',14),
+    xlabel('$\sigma[MPa] $','Interpreter','latex','FontSize',14),ylabel('$E[MPa]$','Interpreter','latex','FontSize',14),
+    legend([p1,p2],{'Modulo de Young tangente','Modulo de Young secante'},'FontSize',14)
+    axis([100,muestra{i}.yieldlim,0,3e5])
+    grid on
+end
+
+%% Esfuerzo vs Modulo de Poisson
 figure('Name','Esfuerzo vs Modulo de Poisson','Position',[0 0 1366 768])
 grad = [0,0,45,45,90,90];
 m = [1,2,1,2,1,2];
@@ -196,8 +221,9 @@ for i = [1,3,5,2,4,6]
     subplot(2,3,j)
     j = j+1;
     plot(muestra{i}.stress(1:length(muestra{i}.poissonsec)),muestra{i}.poissonsec,'o','MarkerSize',2);
-    title({'Esfuerzo vs Modulo de Posson';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
+    title({'Esfuerzo vs Modulo de Poisson';strcat('DP-1000 a $',num2str(grad(i)),'^{\circ}$ Muestra $',num2str(m(i)),'$')},...
         'Interpreter','latex','FontSize',14),
     xlabel('$\sigma[MPa] $','Interpreter','latex','FontSize',14),ylabel('$\nu[MPa]$','Interpreter','latex','FontSize',14),
+    axis([0,muestra{i}.yieldlim,0,.5])
     grid on
 end
